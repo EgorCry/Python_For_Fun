@@ -92,15 +92,15 @@ def display_hangman(tries):
 def fool_check(a, lang, used_letters):
     if lang == 'english':
         if a.isalpha() and len(a) == 1:
-            if a in used_letters:
+            if a.lower() in used_letters:
                 return fool_check(input('Letter was already used. Try another one: '), lang, used_letters)
-            return a
+            return a.lower()
         return fool_check(input('Invalid input. Try again: '), lang, used_letters)
     ru = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
-    if a in ru and len(a) == 1:
-        if a in used_letters:
+    if a.lower() in ru and len(a) == 1:
+        if a.lower() in used_letters:
             return fool_check(input('Letter was already used. Try another one: '), lang, used_letters)
-        return a
+        return a.lower()
     return fool_check(input('Invalid input. Try again: '), lang, used_letters)
 
 
@@ -116,7 +116,21 @@ def fool_answer(a):
         return True
     if a.lower() == 'no':
         return False
-    return fool_check(input('Invalid input. Try again: '))
+    return fool_answer(input('Invalid input. Try again: '))
+
+
+def hint(language, used_letters, word):
+    if language == 'english':
+        eng = 'abcdefghijklmnopqrstuvwxyz'
+        rand = random.choice(eng)
+        if rand not in used_letters and rand in word:
+            return rand.lower()
+        return hint(language, used_letters, word)
+    ru = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+    rand = random.choice(ru)
+    if rand not in used_letters and rand in word:
+        return rand.lower()
+    return hint(language, used_letters, word)
 
 
 def play():
@@ -130,7 +144,9 @@ def play():
     print("This is place for you, my lil' hangy", display_hangman(tries), f'\nYou have: {tries}', ('tries' if tries > 1
                                                                                                    else 'try'))
     while not guessed:
-        print('Current word:', word_completion)
+        print('Current word:', word_completion.upper())
+        print('Used letters:', end=' ')
+        print(*used_letters, sep='')
         try_word = fool_check(input('Your intended letter: '), lang, used_letters)
         used_letters.append(try_word)
         if try_word in word:
@@ -146,14 +162,24 @@ def play():
             tries -= 1
             print(display_hangman(tries))
             print(f'You have {tries}', ('tries' if tries > 1 else 'try'))
+            if tries == 1:
+                if fool_answer(input('Need a hint? (yes/no)\nAnswer: ')):
+                    hints = hint(lang, used_letters, word)
+                    word_completion = [i for i in word_completion]
+                    word = [i for i in word]
+                    for i in range(len(word)):
+                        if word[i] == hints:
+                            word_completion[i] = hints
+                    word = to_word(word)
+                    word_completion = to_word(word_completion)
         if '_' not in word_completion:
             guessed = True
         if tries == 0:
             break
     if guessed:
-        print('You\'ve won! Congratulations!!!')
+        print(f'You\'ve won! Congratulations!!!\nWord is: {word.upper()}')
     else:
-        print(f'You\'ve lose... That\'s the word: {word}')
+        print(f'You\'ve lose... That\'s the word: {word.upper()}')
     print('Want to play again?')
     if fool_answer(input('Want to play again? (yes/no)\nAnswer: ')):
         play()
